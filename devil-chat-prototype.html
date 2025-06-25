@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devil Chat - 癌症患者避坑游戏原型图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .screen {
+            display: none;
+            min-height: 500px;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        /* 对话界面 */
+        .chat-container {
+            padding: 20px;
+            height: 500px;
+            overflow-y: auto;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        .message.doctor {
+            text-align: left;
+        }
+        
+        .message.patient {
+            text-align: right;
+        }
+        
+        .message-bubble {
+            display: inline-block;
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .doctor .message-bubble {
+            background: #f1f3f4;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .patient .message-bubble {
+            background: #007bff;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-block;
+            vertical-align: top;
+            margin: 0 8px;
+        }
+        
+        .doctor .avatar {
+            background: #ff6b6b;
+        }
+        
+        .patient .avatar {
+            background: #4ecdc4;
+        }
+        
+        .typing {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            margin-left: 10px;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            animation: typing 1.4s infinite;
+        }
+        
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        /* 选择菜单 */
+        .choices-container {
+            padding: 20px;
+        }
+        
+        .question {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .choice {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .choice:hover {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+        
+        .choice.selected {
+            border-color: #007bff;
+            background: #007bff;
+            color: white;
+        }
+        
+        .choice-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s ease;
+        }
+        
+        .submit-btn:hover {
+            background: #218838;
+        }
+        
+        .submit-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        /* 答案解释 */
+        .result-container {
+            padding: 20px;
+        }
+        
+        .result-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .result-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+        
+        .correct .result-icon {
+            background: #d4edda;
+            color: #28a745;
+        }
+        
+        .wrong .result-icon {
+            background: #f8d7da;
+            color: #dc3545;
+        }
+        
+        .explanation {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .next-btn {
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .progress {
+            background: #e9ecef;
+            height: 4px;
+            border-radius: 2px;
+            margin: 10px 20px;
+        }
+        
+        .progress-bar {
+            background: #007bff;
+            height: 100%;
+            border-radius: 2px;
+            width: 33%;
+            transition: width 0.3s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+        
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Devil Chat</h1>
+            <p>癌症患者避坑游戏</p>
+        </div>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <!-- 对话界面 -->
+        <div class="screen active" id="chatScreen">
+            <div class="chat-container" id="chatContainer">
+                <div class="message patient">
+                    <div class="message-bubble">
+                        医生，这是我家人的胰腺癌检查报告，您帮我看看。检查时间是2025年1月1日，PET-CT显示胰腺尾部占位，穿刺病理KRAS-Q61V突变。
+                    </div>
+                    <div class="avatar"></div>
+                </div>
+                
+                <div class="message doctor">
+                    <div class="avatar"></div>
+                    <div class="message-bubble">
+                        你这个情况很危险啊，你看，你这个位置，血管包绕严重，不能手术了。不过你可以内科治疗，你家里这个情况，有没有了解过免疫治疗，靶向治疗啊？
+                    </div>
+                </div>
+                
+                <div class="message patient">
+                    <div class="message-bubble">
+                        了解过一点，您有办法吗？
+                    </div>
+                    <div class="avatar"></div>
+                </div>
+                
+                <div class="message doctor">
+                    <div class="avatar"></div>
+                    <div class="message-bubble">
+                        嗯，好的，你先按照这个方案治疗。化疗：AS，加上靶向药，国内很有名的一个药，叫尼妥珠，专门治疗胰腺癌的。
+                    </div>
+                </div>
+                
+                <div class="message doctor">
+                    <div class="avatar"></div>
+                    <div class="message-bubble">
+                        嗯，考虑效果再强化一下，你可以加上免疫治疗，要不要考虑一下？
+                    </div>
+                </div>
+                
+                <div class="message patient">
+                    <div class="message-bubble">
+                        好的，谢谢医生，这个费用怎么样？
+                    </div>
+                    <div class="avatar"></div>
+                </div>
+                
+                <div class="message doctor">
+                    <div class="avatar"></div>
+                    <div class="message-bubble">
+                        这个你看下，有些医保内的，我会尽量帮你争取医保，但是这个治疗方案，主要还是看你们自己选。你考虑考虑，不过还是尽快开始治疗啊，别耽误了。
+                    </div>
+                </div>
+                
+                <div class="typing">
+                    <div class="avatar"></div>
+                    <div class="typing-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 选择菜单 -->
+        <div class="screen" id="choiceScreen">
+            <div class="choices-container">
+                <div class="question">
+                    <strong>🤔 判断题：</strong><br>
+                    面对这种胰腺癌KRAS突变的情况，你会如何选择？
+                </div>
+                
+                <div class="choice" data-value="A">
+                    <div class="choice-label">A. 我相信医生会帮助我的</div>
+                    <div>那我就接受这个方案吧</div>
+                </div>
+                
+                <div class="choice" data-value="B">
+                    <div class="choice-label">B. 我看不太懂</div>
+                    <div>要不问问家里人和朋友</div>
+                </div>
+                
+                <div class="choice" data-value="C">
+                    <div class="choice-label">C. 我去查一下指南和药品说明书</div>
+                    <div>问问病友，顺便去AI查查</div>
+                </div>
+                
+                <div class="choice" data-value="D">
+                    <div class="choice-label">D. 天啊，总算还有希望</div>
+                    <div>赶紧上药，明天就化疗，谢谢您救命之恩啊！</div>
+                </div>
+                
+                <button class="submit-btn" id="submitBtn" disabled>提交答案</button>
+            </div>
+        </div>
+        
+        <!-- 答案解释 -->
+        <div class="screen" id="resultScreen">
+            <div class="result-container">
+                <div class="result-header correct">
+                    <div class="result-icon">✓</div>
+                    <h3>回答正确！</h3>
+                    <p>你成功识破了医疗陷阱</p>
+                </div>
+                
+                <div class="explanation">
+                    <h4>📚 详细解释：</h4>
+                    <p><strong>正确答案：C - 我去查一下指南和药品说明书</strong></p>
+                    <br>
+                    <p><strong>🧬 KRAS基因科普：</strong></p>
+                    <ul>
+                        <li>• <strong>KRAS基因</strong>：是一种重要的癌基因，正常情况下调节细胞生长</li>
+                        <li>• <strong>KRAS突变</strong>：约90%的胰腺癌患者存在KRAS突变</li>
+                        <li>• <strong>突变类型</strong>：常见有G12C、G12D、G12V、Q61等不同位点突变</li>
+                        <li>• <strong>KRAS野生型</strong>：指KRAS基因未发生突变的正常状态</li>
+                    </ul>
+                    <br>
+                    <p><strong>⚠️ 尼妥珠单抗风险提醒：</strong></p>
+                    <ul>
+                        <li>• <strong>适应症限制</strong>：尼妥珠单抗仅适用于KRAS野生型患者</li>
+                        <li>• <strong>患者情况</strong>：报告显示KRAS-Q61V突变，属于突变型，不是野生型</li>
+                        <li>• <strong>临床数据</strong>：即使在适应症内，PFS（无进展生存期）仅延长3个月</li>
+                        <li>• <strong>超适应症风险</strong>：在KRAS突变患者中使用属于超适应症用药</li>
+                    </ul>
+                    <br>
+                    <p><strong>💡 防坑建议：</strong></p>
+                    <p>1. 查阅NCCN、CSCO等权威指南<br>
+                    2. 核实药品说明书中的适应症<br>
+                    3. 寻求多个专家意见<br>
+                    4. 警惕超指南、超适应症的昂贵药品推荐</p>
+                </div>
+                
+                <button class="next-btn" id="nextBtn">下一关 →</button>
+            </div>
+        </div>
+        
+
+    </div>
+    
+    <script>
+        let selectedChoice = null;
+        
+        // 显示不同屏幕
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+            
+            // 更新进度条
+            const progressBar = document.getElementById('progressBar');
+            if (screenId === 'chatScreen') {
+                progressBar.style.width = '33%';
+            } else if (screenId === 'choiceScreen') {
+                progressBar.style.width = '66%';
+            } else if (screenId === 'resultScreen') {
+                progressBar.style.width = '100%';
+            }
+        }
+        
+        // 选择答案
+        document.querySelectorAll('.choice').forEach(choice => {
+            choice.addEventListener('click', function() {
+                // 移除之前的选择
+                document.querySelectorAll('.choice').forEach(c => {
+                    c.classList.remove('selected');
+                });
+                
+                // 添加当前选择
+                this.classList.add('selected');
+                selectedChoice = this.dataset.value;
+                
+                // 启用提交按钮
+                document.getElementById('submitBtn').disabled = false;
+            });
+        });
+        
+        // 提交答案
+        document.getElementById('submitBtn').addEventListener('click', function() {
+            if (selectedChoice) {
+                showScreen('resultScreen');
+            }
+        });
+        
+        // 对话完成后自动跳转到选择界面
+        setTimeout(() => {
+            showScreen('choiceScreen');
+        }, 8000);
+        
+        // 下一关
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            alert('🎉 恭喜完成第一关！\n\n在实际应用中，这里会加载下一个对话场景。');
+        });
+        
+        // 模拟动态对话效果
+        function simulateTyping() {
+            const chatContainer = document.getElementById('chatContainer');
+            const messages = chatContainer.querySelectorAll('.message');
+            const typing = chatContainer.querySelector('.typing');
+            
+            // 隐藏所有消息
+            messages.forEach(msg => msg.style.display = 'none');
+            typing.style.display = 'none';
+            
+            // 逐个显示消息
+            let index = 0;
+            function showNextMessage() {
+                if (index < messages.length) {
+                    messages[index].style.display = 'block';
+                    messages[index].scrollIntoView({ behavior: 'smooth' });
+                    index++;
+                    setTimeout(showNextMessage, 2000);
+                } else {
+                    // 显示输入状态
+                    typing.style.display = 'flex';
+                    setTimeout(() => {
+                        typing.style.display = 'none';
+                        // 可以在这里添加更多消息或跳转到选择界面
+                    }, 3000);
+                }
+            }
+            
+            showNextMessage();
+        }
+        
+        // 页面加载时开始动画（可选）
+        // simulateTyping();
+    </script>
+</body>
+</html>
